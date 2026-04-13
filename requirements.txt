@@ -1,3 +1,5 @@
 pyserial
 pyautogui
-eel
+fastapi
+uvicorn
+websockets

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>EEG/EMG 实时上位机</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #1e1e1e; color: white; text-align: center; }
+        canvas { background-color: #000; border: 1px solid #555; margin-top: 20px; box-shadow: 0 0 10px rgba(0,255,0,0.2); }
+        .status { margin-top: 10px; font-size: 1.2em; color: #aaa; }
+        .connected { color: #00ff00; }
+        .disconnected { color: #ff3333; }
+    </style>
+</head>
+<body>
+
+    <h1>实时脑电/肌电信号监控</h1>
+    <div class="status" id="status">状态：<span class="disconnected">等待连接...</span></div>
+    
+    <canvas id="signalCanvas" width="800" height="300"></canvas>
+
+    <script>
+        // 1. 初始化 Canvas 画布
+        const canvas = document.getElementById('signalCanvas');
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        const centerY = height / 2;
+        
+        // 存储历史数据的数组（控制屏幕上显示的点的总数）
+        const maxPoints = 400; 
+        let dataBuffer = new Array(maxPoints).fill(0);
+
+        // 2. 建立 WebSocket 连接
+        // 注意：如果你部署到服务器，这里要换成服务器的 IP
+        const ws = new WebSocket("ws://127.0.0.1:8000/ws/signal");
+        const statusSpan = document.querySelector('#status span');
+
+        ws.onopen = function() {
+            statusSpan.textContent = "已连接 (数据接收中)";
+            statusSpan.className = "connected";
+        };
+
+        ws.onclose = function() {
+            statusSpan.textContent = "已断开连接";
+            statusSpan.className = "disconnected";
+        };
+
+        // 3. 接收数据并更新缓冲区
+        ws.onmessage = function(event) {
+            const message = JSON.parse(event.data);
+            if (message.type === 'eeg_data') {
+                const newValues = message.values; // 这是一个包含 10 个点的数组
+                
+                // 将新数据推入缓冲区，并移除最早的数据，实现“滚动”效果
+                for (let i = 0; i < newValues.length; i++) {
+                    dataBuffer.push(newValues[i]);
+                    dataBuffer.shift(); 
+                }
+                
+                // 收到新数据后触发重绘
+                drawSignal();
+            }
+        };
+
+        // 4. 绘制波形的函数
+        function drawSignal() {
+            // 清空画布
+            ctx.clearRect(0, 0, width, height);
+            
+            // 绘制中心参考线
+            ctx.beginPath();
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            ctx.moveTo(0, centerY);
+            ctx.lineTo(width, centerY);
+            ctx.stroke();
+
+            // 绘制信号波形
+            ctx.beginPath();
+            ctx.strokeStyle = '#00ffcc'; // 荧光青色波形
+            ctx.lineWidth = 2;
+
+            const step = width / (maxPoints - 1); // 每个点之间的水平间距
+
+            for (let i = 0; i < dataBuffer.length; i++) {
+                const x = i * step;
+                // 数据反转并缩放适应画布（假设最大振幅为 100）
+                const y = centerY - (dataBuffer[i] * (height / 200)); 
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+        }
+    </script>
+</body>
+</html>
