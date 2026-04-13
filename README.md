@@ -1,0 +1,1 @@
+# Build an automated EEG & EMG acquisition kit
