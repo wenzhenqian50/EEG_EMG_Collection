@@ -7,12 +7,11 @@ from pywinauto import Application
 # ================= Configuration ==================
 LOG_NAME = "wzq"
 IDX_COUNTER = 1
-# 根据需求调整串口
+# 串口配置
 SERIAL_PORT = "COM3"
 SERIAL_BAUD = 115200
-
-# EEG上位机窗口和控件标题配置
-EEG_EXE_PATH = "eegsdk_demo.exe" # 用户提到的exe名称
+# EEG上位机窗口名
+EEG_EXE_PATH = "eegsdk_demo.exe"
 # ==================================================
 
 class DataCollector:
@@ -52,14 +51,14 @@ class DataCollector:
         except Exception as e:
             print(f"[警告] pywinauto未能成功控制EEG上位机 ({cmd}): {e}")
 
-    def start_trial(self, action):
+    def start_trial(self, action, subject_name, round_num):
         """开始一次新的完整动作采集（前3个阶段）"""
         self.current_action = action
         self.buffer = {'Baseline': [], 'MotorPrep': [], 'Execution': []}
         
-        folder_path = f'saved_files_{LOG_NAME}_{IDX_COUNTER}'
+        folder_path = os.path.join("Dataset", "EMG_Data", subject_name)
         os.makedirs(folder_path, exist_ok=True)
-        self.current_filepath = os.path.join(folder_path, f'{LOG_NAME}_{IDX_COUNTER}_{action}.csv')
+        self.current_filepath = os.path.join(folder_path, f'{subject_name}_{round_num}_{action}.csv')
         
         self.trigger_eeg_app("start")
         self.is_collecting = True
@@ -120,6 +119,7 @@ class DataCollector:
             await asyncio.sleep(0.005) # 高频轮询
 
 collector = DataCollector()
+
 # import serial
 # import csv
 # import os

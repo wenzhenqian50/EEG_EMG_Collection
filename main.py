@@ -33,6 +33,8 @@ class ExperimentState:
         
         self.active_task = None
         self.undo_flag = False
+        self.subject_name = ""
+        self.round_num = 1
 
 state = ExperimentState()
 
@@ -45,6 +47,7 @@ async def get_index():
 
 class CommandRequest(BaseModel):
     command: str
+    subject_name: str = ""
 
 @app.post("/api/control")
 async def control_experiment(req: CommandRequest):
@@ -53,6 +56,24 @@ async def control_experiment(req: CommandRequest):
         if not state.is_running:
             state.is_running = True
             state.is_paused = False
+            state.subject_name = req.subject_name or "Unknown"
+            
+            # 计算轮数
+            import os
+            folder_path = os.path.join("Dataset", "EMG_Data", state.subject_name)
+            max_round = 0
+            if os.path.exists(folder_path):
+                for f in os.listdir(folder_path):
+                    if f.endswith(".csv") and f.startswith(state.subject_name + "_"):
+                        parts = f.split("_")
+                        if len(parts) >= 3:
+                            try:
+                                r = int(parts[1])
+                                max_round = max(max_round, r)
+                            except ValueError:
+                                pass
+            state.round_num = max_round + 1
+            
             state.action_queue = random.sample(action_list, len(action_list))
             state.active_task = asyncio.create_task(experiment_loop())
         elif state.is_paused:
@@ -128,7 +149,7 @@ async def experiment_loop():
         print(f"\n--- 抽取动作: {state.current_action} 剩余: {len(state.action_queue)} ---")
         
         # 1. 触发准备收集
-        collector.start_trial(state.current_action)
+        collector.start_trial(state.current_action, state.subject_name, state.round_num)
 
         # 2. 准备阶段：基线（持续3s）
         if not await run_phase("准备阶段 (基线采集)", 3.0, "Baseline"):
