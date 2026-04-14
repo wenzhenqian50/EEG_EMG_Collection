@@ -152,7 +152,7 @@ async def experiment_loop():
         collector.start_trial(state.current_action, state.subject_name, state.round_num)
 
         # 2. 准备阶段：基线（持续3s）
-        if not await run_phase("准备阶段 (基线采集)", 3.0, "Baseline"):
+        if not await run_phase("准备阶段", 3.0, "Baseline"):
             await handle_undo()
             continue
 
