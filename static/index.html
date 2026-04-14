@@ -260,7 +260,11 @@
             const data = JSON.parse(event.data);
             
             uiPhase.innerText = data.phase_name;
-            uiAction.innerText = data.current_action ? data.current_action.toUpperCase() : "--";
+            
+            // 仅在“运动准备阶段”和“动作执行阶段”显示具体动作
+            const isMotorPhase = data.phase_name.includes("运动准备") || data.phase_name.includes("执行");
+            uiAction.innerText = (data.current_action && isMotorPhase) ? data.current_action.toUpperCase() : "--";
+            
             uiCountdown.innerText = Math.max(0, data.countdown).toFixed(1);
 
             // 动态颜色变更（微调了透明度使其在毛玻璃上更好看）
