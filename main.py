@@ -99,7 +99,7 @@ async def websocket_state(websocket: WebSocket):
                 "current_action": state.current_action,
                 "countdown": state.countdown
             })
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.01)
     except WebSocketDisconnect:
         pass
 
@@ -127,7 +127,7 @@ async def run_phase(phase_name: str, duration: float, collector_phase_key: str =
 async def handle_undo():
     """撤销当前动作，放回队列"""
     print(f"[撤销] 已打断，废弃当前动作数据: {state.current_action}")
-    collector.abort_trial()
+    await asyncio.to_thread(collector.abort_trial)
     
     # 重新放回队列并打乱
     state.action_queue.append(state.current_action)
@@ -150,8 +150,12 @@ async def experiment_loop():
         
         print(f"\n--- 抽取动作: {state.current_action} 剩余: {len(state.action_queue)} ---")
         
-        # 1. 触发准备收集
-        collector.start_trial(state.current_action, state.subject_name, state.round_num)
+        # 提前将UI切换到下一阶段的初始状态，假装已经进入阶段但不进行倒计时
+        state.phase_name = "准备阶段"
+        state.countdown = 3.0
+        
+        # 1. 触发准备收集 (使用 to_thread 异步等待它执行完毕，不阻塞主循环)
+        await asyncio.to_thread(collector.start_trial, state.current_action, state.subject_name, state.round_num)
 
         # 2. 准备阶段：基线（持续3s）
         if not await run_phase("准备阶段", 3.0, "Baseline"):
@@ -169,7 +173,10 @@ async def experiment_loop():
             continue
 
         # 正常完成，停止采集并落表保存
-        collector.stop_and_save_trial()
+        # 提前将UI切换到放松阶段的初始状态，假装已经进入阶段但不进行倒计时
+        state.phase_name = "放松阶段"
+        state.countdown = 4.0
+        await asyncio.to_thread(collector.stop_and_save_trial) # 等待停止并保存
 
         # 5. 放松阶段（持续4s，不收集）
         if not await run_phase("放松阶段", 4.0, None):
