@@ -1,0 +1,109 @@
+Control Identifiers:
+
+WindowsForms10.Window.8.app.0.141b42a_r6_ad1 - 'Form1'    (L-64000, T-64000, R-63372, B-63900)
+['WindowsForms10.Window.8.app.0.141b42a_r6_ad1', 'Form1WindowsForms10.Window.8.app.0.141b42a_r6_ad1', 'Form1', 'WindowsForms10.Window.8.app.0.141b42a_r6_ad10', 'WindowsForms10.Window.8.app.0.141b42a_r6_ad11']
+child_window(title="Form1", auto_id="Form1", control_type="eegsdk_demo.Form1")
+   | 
+   | Edit - ''    (L-62384, T-63920, R-62012, B-63878)
+   | ['Edit', '版本Edit', 'Edit0', 'Edit1']
+   | child_window(auto_id="textBox4", control_type="System.Windows.Forms.TextBox")
+   | 
+   | Button - '版本'    (L-62522, T-63920, R-62412, B-63880)
+   | ['Button', '版本', '版本Button', 'Button0', 'Button1']
+   | child_window(title="版本", auto_id="button6", control_type="System.Windows.Forms.Button")
+   | 
+   | Button - '保存结束'    (L-63040, T-63920, R-62912, B-63872)
+   | ['Button2', '保存结束', '保存结束Button']
+   | child_window(title="保存结束", auto_id="button5", control_type="System.Windows.Forms.Button")
+   | 
+   | Button - '保存'    (L-63238, T-63920, R-63098, B-63872)
+   | ['保存', 'Button3', '保存Button']
+   | child_window(title="保存", auto_id="button4", control_type="System.Windows.Forms.Button")
+   | 
+   | Edit - ''    (L-63792, T-62676, R-61918, B-62634)
+   | ['Edit2', 'hrAndSpo2Edit']
+   | child_window(auto_id="textBox3", control_type="System.Windows.Forms.TextBox")
+   | 
+   | Static - 'hrAndSpo2'    (L-63972, T-62676, R-63814, B-62644)
+   | ['hrAndSpo2', 'Static', 'hrAndSpo2Static', 'Static0', 'Static1']
+   | child_window(title="hrAndSpo2", auto_id="label5", control_type="System.Windows.Forms.Label")
+   | 
+   | Static - 'G-sensor'    (L-63956, T-62748, R-63814, B-62716)
+   | ['G-sensorStatic', 'G-sensor', 'Static2']
+   | child_window(title="G-sensor", auto_id="label4", control_type="System.Windows.Forms.Label")
+   | 
+   | Static - 'feature'    (L-63942, T-62822, R-63816, B-62790)
+   | ['Static3', 'featureStatic', 'feature']
+   | child_window(title="feature", auto_id="label3", control_type="System.Windows.Forms.Label")
+   | 
+   | Edit - ''    (L-63792, T-62748, R-61918, B-62706)
+   | ['Edit3', 'featureEdit', 'G-sensorEdit', 'featureEdit0', 'featureEdit1']
+   | child_window(auto_id="textBox2", control_type="System.Windows.Forms.TextBox")
+   | 
+   | Edit - ''    (L-63792, T-62830, R-61918, B-62788)
+   | ['Edit4', 'featureEdit2']
+   | child_window(auto_id="textBox1", control_type="System.Windows.Forms.TextBox")
+   | 
+   | Static - '亮度'    (L-62314, T-63980, R-62256, B-63956)
+   | ['亮度Static', 'Static4', '亮度']
+   | child_window(title="亮度", auto_id="label2", control_type="System.Windows.Forms.Label")
+   | 
+   | Static - '放大倍数'    (L-62696, T-63980, R-62590, B-63956)
+   | ['放大倍数Static', 'Static5', '放大倍数']
+   | child_window(title="放大倍数", auto_id="label1", control_type="System.Windows.Forms.Label")
+   | 
+   | ComboBox - ''    (L-62224, T-63986, R-62014, B-63946)
+   | ['放大倍数ComboBox', 'ComboBox', '亮度ComboBox', '放大倍数ComboBox0', '放大倍数ComboBox1', 'ComboBox0', 'ComboBox1']
+   | child_window(auto_id="comboBox3", control_type="System.Windows.Forms.ComboBox")
+   |    | 
+   |    | Edit - ''    (L-62218, T-63980, R-62054, B-63952)
+   |    | ['Edit5', '亮度Edit']
+   |    | child_window(class_name="Edit")
+   | 
+   | Edit - ''    (L-62218, T-63980, R-62054, B-63952)
+   | ['Edit5', '亮度Edit']
+   | child_window(class_name="Edit")
+   | 
+   | ComboBox - ''    (L-62588, T-63986, R-62368, B-63946)
+   | ['放大倍数ComboBox2', 'ComboBox2']
+   | child_window(auto_id="comboBox2", control_type="System.Windows.Forms.ComboBox")
+   |    | 
+   |    | Edit - ''    (L-62582, T-63980, R-62408, B-63952)
+   |    | ['Edit6', '放大倍数Edit']
+   |    | child_window(class_name="Edit")
+   | 
+   | Edit - ''    (L-62582, T-63980, R-62408, B-63952)
+   | ['Edit6', '放大倍数Edit']
+   | child_window(class_name="Edit")
+   | 
+   | WindowsForms10.Window.8.app.0.141b42a_r6_ad1 - 'chart2'    (L-63982, T-63340, R-61922, B-62860)
+   | ['WindowsForms10.Window.8.app.0.141b42a_r6_ad12', 'chart2', 'chart2WindowsForms10.Window.8.app.0.141b42a_r6_ad1']
+   | child_window(title="chart2", auto_id="chart2", control_type="System.Windows.Forms.DataVisualization.Charting.Chart")
+   | 
+   | ComboBox - ''    (L-63780, T-63958, R-63356, B-63918)
+   | ['ComboBox3', '搜索ComboBox']
+   | child_window(auto_id="comboBox1", control_type="System.Windows.Forms.ComboBox")
+   |    | 
+   |    | Edit - ''    (L-63774, T-63952, R-63396, B-63924)
+   |    | ['Edit7', '搜索Edit']
+   |    | child_window(class_name="Edit")
+   | 
+   | Edit - ''    (L-63774, T-63952, R-63396, B-63924)
+   | ['Edit7', '搜索Edit']
+   | child_window(class_name="Edit")
+   | 
+   | Button - '断开'    (L-63040, T-63980, R-62912, B-63928)
+   | ['Button4', '断开Button', '断开']
+   | child_window(title="断开", auto_id="button3", control_type="System.Windows.Forms.Button")
+   | 
+   | Button - '连接'    (L-63238, T-63980, R-63098, B-63928)
+   | ['Button5', '连接Button', '连接']
+   | child_window(title="连接", auto_id="button2", control_type="System.Windows.Forms.Button")
+   | 
+   | Button - '搜索'    (L-63944, T-63968, R-63804, B-63916)
+   | ['Button6', '搜索Button', '搜索']
+   | child_window(title="搜索", auto_id="button1", control_type="System.Windows.Forms.Button")
+   | 
+   | WindowsForms10.Window.8.app.0.141b42a_r6_ad1 - 'chart1'    (L-63982, T-63848, R-61922, B-63368)
+   | ['WindowsForms10.Window.8.app.0.141b42a_r6_ad13', 'chart1', 'chart1WindowsForms10.Window.8.app.0.141b42a_r6_ad1']
+   | child_window(title="chart1", auto_id="chart1", control_type="System.Windows.Forms.DataVisualization.Charting.Chart")

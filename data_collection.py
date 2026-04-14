@@ -2,7 +2,6 @@ import asyncio
 import os
 import csv
 import serial
-import threading
 from pywinauto import Application
 
 # ================= Configuration ==================
@@ -38,23 +37,20 @@ class DataCollector:
             print(f"[警告] 无法连接串口 {SERIAL_PORT}: {e}")
 
     def trigger_eeg_app(self, cmd="start"):
-        def _trigger():
-            try:
-                # 使用 UIA 模式寻找窗口
-                app = Application(backend="uia").connect(path=EEG_EXE_PATH)
-                win = app.top_window()
-                if cmd == "start":
-                    # 模糊匹配名称包含开始/采集的按钮
-                    win.child_window(title_re=".*开始.*|.*采集.*", control_type="Button").click()
-                    print("[EEG上位机] 触发: 开始采集")
-                elif cmd == "stop":
-                    win.child_window(title_re=".*结束.*|.*停止.*", control_type="Button").click()
-                    print("[EEG上位机] 触发: 停止采集")
-            except Exception as e:
-                print(f"[警告] pywinauto未能成功控制EEG上位机 ({cmd}): {e}")
-
-        # 使用后台线程执行，防止阻塞 FastAPI 和 asyncio 主循环
-        threading.Thread(target=_trigger, daemon=True).start()
+        try:
+            # 改为使用 win32 模式寻找窗口，提升速度与兼容性
+            app = Application(backend="win32").connect(path=EEG_EXE_PATH)
+            win = app.top_window()
+            if cmd == "start":
+                # 根据 widget_tree.txt，触发保存（即开始记录数据）为 "保存" 按钮 
+                win.child_window(title="保存").click()
+                print("[EEG上位机] 触发: 保存 (开始采集)")
+            elif cmd == "stop":
+                # 根据 widget_tree.txt，触发停止记录数据为 "保存结束" 按钮 
+                win.child_window(title="保存结束").click()
+                print("[EEG上位机] 触发: 保存结束 (停止采集)")
+        except Exception as e:
+            print(f"[警告] pywinauto未能成功控制EEG上位机 ({cmd}): {e}")
 
     def start_trial(self, action, subject_name, round_num):
         """开始一次新的完整动作采集（前3个阶段）"""
