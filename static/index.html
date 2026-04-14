@@ -2,99 +2,265 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>EEG/EMG 实时上位机</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EEG & EMG 联合采集终端</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #1e1e1e; color: white; text-align: center; }
-        canvas { background-color: #000; border: 1px solid #555; margin-top: 20px; box-shadow: 0 0 10px rgba(0,255,0,0.2); }
-        .status { margin-top: 10px; font-size: 1.2em; color: #aaa; }
-        .connected { color: #00ff00; }
-        .disconnected { color: #ff3333; }
+        :root {
+            /* 玻璃质感配置 */
+            --glass-bg: rgba(255, 255, 255, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.6);
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            /* 文本颜色 */
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --accent: #3b82f6;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* 炫彩渐变背景底色 */
+            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            /* 动画让背景呼吸起来 */
+            background-size: 200% 200%;
+            animation: gradientAnim 10s ease infinite;
+            color: var(--text-main);
+        }
+
+        @keyframes gradientAnim {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* 增加几个装饰性的模糊彩色光球（可选） */
+        .blob-1, .blob-2 {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+        }
+        .blob-1 {
+            width: 400px;
+            height: 400px;
+            background: rgba(255, 154, 158, 0.6);
+            top: -100px;
+            left: -100px;
+        }
+        .blob-2 {
+            width: 500px;
+            height: 500px;
+            background: rgba(250, 208, 196, 0.6);
+            bottom: -150px;
+            right: -100px;
+        }
+
+        .container {
+            /* 毛玻璃核心代码 */
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            
+            padding: 3.5rem 4.5rem;
+            border-radius: 24px;
+            text-align: center;
+            min-width: 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            z-index: 1;
+        }
+
+        .info-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .phase-text {
+            font-size: 1.8rem;
+            font-weight: 500;
+            margin: 0;
+            color: var(--text-muted);
+            transition: color 0.3s;
+        }
+
+        .action-text {
+            font-size: 2.8rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 0;
+            min-height: 3.5rem;
+            transition: color 0.3s;
+            text-shadow: 0 2px 4px rgba(255, 255, 255, 0.5); /* 强化在玻璃上的对比度 */
+        }
+
+        .countdown-text {
+            font-size: 5rem;
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+            margin: 0;
+            line-height: 1;
+            color: var(--accent);
+            transition: color 0.3s;
+            text-shadow: 0 2px 4px rgba(255, 255, 255, 0.5);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        button {
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(4px);
+            padding: 0.6rem 1.2rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            color: var(--text-main);
+        }
+
+        button:active {
+            transform: scale(0.96);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-start {
+            background-color: rgba(59, 130, 246, 0.8);
+            color: white;
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+        .btn-start:hover {
+            background-color: rgba(37, 99, 235, 0.9);
+        }
+
+        .btn-pause {
+            /* 使用纯粹的玻璃质感按钮 */
+        }
+        .btn-pause:hover {
+            background: rgba(255, 255, 255, 0.6);
+        }
+
+        .btn-undo {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+        .btn-undo:hover {
+            background-color: rgba(239, 68, 68, 0.2);
+        }
+
+        /* Icons */
+        .icon {
+            width: 16px;
+            height: 16px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
     </style>
 </head>
 <body>
+    <!-- 装饰球提供更好的折射效果 -->
+    <div class="blob-1"></div>
+    <div class="blob-2"></div>
 
-    <h1>实时脑电/肌电信号监控</h1>
-    <div class="status" id="status">状态：<span class="disconnected">等待连接...</span></div>
-    
-    <canvas id="signalCanvas" width="800" height="300"></canvas>
+    <div class="container">
+        <div class="info-section">
+            <div class="phase-text" id="ui-phase">等待启动</div>
+            <div class="action-text" id="ui-action">--</div>
+        </div>
+        
+        <div class="countdown-text" id="ui-countdown">0.0</div>
+
+        <div class="controls">
+            <button class="btn-start" onclick="sendCommand('start')">
+                <svg class="icon"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                启动
+            </button>
+            <button class="btn-pause" onclick="sendCommand('pause')">
+                <svg class="icon"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+                暂停
+            </button>
+            <button class="btn-undo" onclick="sendCommand('undo')">
+                <svg class="icon"><path d="M3 7v6h6"></path><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path></svg>
+                撤销
+            </button>
+        </div>
+    </div>
 
     <script>
-        // 1. 初始化 Canvas 画布
-        const canvas = document.getElementById('signalCanvas');
-        const ctx = canvas.getContext('2d');
-        const width = canvas.width;
-        const height = canvas.height;
-        const centerY = height / 2;
+        const uiPhase = document.getElementById('ui-phase');
+        const uiAction = document.getElementById('ui-action');
+        const uiCountdown = document.getElementById('ui-countdown');
+
+        let ws = new WebSocket(`ws://${window.location.host}/ws/state`);
         
-        // 存储历史数据的数组（控制屏幕上显示的点的总数）
-        const maxPoints = 400; 
-        let dataBuffer = new Array(maxPoints).fill(0);
-
-        // 2. 建立 WebSocket 连接
-        // 注意：如果你部署到服务器，这里要换成服务器的 IP
-        const ws = new WebSocket("ws://127.0.0.1:8000/ws/signal");
-        const statusSpan = document.querySelector('#status span');
-
-        ws.onopen = function() {
-            statusSpan.textContent = "已连接 (数据接收中)";
-            statusSpan.className = "connected";
-        };
-
-        ws.onclose = function() {
-            statusSpan.textContent = "已断开连接";
-            statusSpan.className = "disconnected";
-        };
-
-        // 3. 接收数据并更新缓冲区
-        ws.onmessage = function(event) {
-            const message = JSON.parse(event.data);
-            if (message.type === 'eeg_data') {
-                const newValues = message.values; // 这是一个包含 10 个点的数组
-                
-                // 将新数据推入缓冲区，并移除最早的数据，实现“滚动”效果
-                for (let i = 0; i < newValues.length; i++) {
-                    dataBuffer.push(newValues[i]);
-                    dataBuffer.shift(); 
-                }
-                
-                // 收到新数据后触发重绘
-                drawSignal();
-            }
-        };
-
-        // 4. 绘制波形的函数
-        function drawSignal() {
-            // 清空画布
-            ctx.clearRect(0, 0, width, height);
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
             
-            // 绘制中心参考线
-            ctx.beginPath();
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 1;
-            ctx.moveTo(0, centerY);
-            ctx.lineTo(width, centerY);
-            ctx.stroke();
+            uiPhase.innerText = data.phase_name;
+            uiAction.innerText = data.current_action ? data.current_action.toUpperCase() : "--";
+            uiCountdown.innerText = Math.max(0, data.countdown).toFixed(1);
 
-            // 绘制信号波形
-            ctx.beginPath();
-            ctx.strokeStyle = '#00ffcc'; // 荧光青色波形
-            ctx.lineWidth = 2;
-
-            const step = width / (maxPoints - 1); // 每个点之间的水平间距
-
-            for (let i = 0; i < dataBuffer.length; i++) {
-                const x = i * step;
-                // 数据反转并缩放适应画布（假设最大振幅为 100）
-                const y = centerY - (dataBuffer[i] * (height / 200)); 
-                
-                if (i === 0) {
-                    ctx.moveTo(x, y);
-                } else {
-                    ctx.lineTo(x, y);
-                }
+            // 动态颜色变更（微调了透明度使其在毛玻璃上更好看）
+            if (data.phase_name.includes("暂停") || data.phase_name.includes("等待")) {
+                uiCountdown.style.color = "var(--text-muted)";
+                uiAction.style.color = "var(--text-muted)";
+                uiPhase.style.color = "var(--text-muted)";
+            } else if (data.phase_name.includes("放松")) {
+                uiCountdown.style.color = "var(--success)";
+                uiAction.style.color = "var(--success)";
+                uiPhase.style.color = "var(--success)";
+            } else if (data.phase_name.includes("执行")) {
+                uiCountdown.style.color = "var(--danger)";
+                uiAction.style.color = "var(--danger)";
+                uiPhase.style.color = "var(--danger)";
+            } else {
+                uiCountdown.style.color = "var(--accent)";
+                uiAction.style.color = "var(--text-main)";
+                uiPhase.style.color = "var(--text-muted)";
             }
-            ctx.stroke();
+        };
+
+        async function sendCommand(cmd) {
+            try {
+                await fetch(`/api/control`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command: cmd })
+                });
+            } catch (err) {
+                console.error("指令发送失败:", err);
+            }
         }
+
+        ws.onclose = () => {
+            console.log('WebSocket 断开，尝试重连...');
+            setTimeout(() => window.location.reload(), 3000);
+        };
     </script>
 </body>
 </html>
