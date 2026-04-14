@@ -110,12 +110,12 @@ body {
 }
 
 .countdown-text {
-    font-size: 4.5rem;
-    font-weight: 700;
+    font-size: 1.8rem;
+    font-weight: 500;
     font-variant-numeric: tabular-nums;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     color: var(--accent);
-    text-shadow: 0 0 15px rgba(79, 172, 227, 0.4);
+    opacity: 0.8;
 }
 
 /* 按钮组 */
