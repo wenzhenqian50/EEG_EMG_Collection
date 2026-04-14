@@ -2,6 +2,8 @@ import asyncio
 import os
 import csv
 import serial
+import shutil
+import time
 from pywinauto import Application
 
 # ================= Configuration ==================
@@ -57,9 +59,15 @@ class DataCollector:
         self.current_action = action
         self.buffer = {'Baseline': [], 'MotorPrep': [], 'Execution': []}
         
+        # 定义 EMG 数据存储路径
         folder_path = os.path.join("Dataset", "EMG_Data", subject_name)
         os.makedirs(folder_path, exist_ok=True)
         self.current_filepath = os.path.join(folder_path, f'{subject_name}_{round_num}_{action}.csv')
+        
+        # 定义 EEG 数据存储目录路径
+        eeg_folder_path = os.path.join("Dataset", "EEG_Data", subject_name)
+        os.makedirs(eeg_folder_path, exist_ok=True)
+        self.current_eeg_dest = os.path.join(eeg_folder_path, f'{subject_name}_{round_num}_{action}')
         
         self.trigger_eeg_app("start")
         self.is_collecting = True
@@ -76,8 +84,7 @@ class DataCollector:
         if not self.current_action:
             return
 
-        # 整理并将数据写入 CSV
-        # 写入格式: 8个通道数据，外加一列 Phase 标签
+        # ============ EMG 数据落表保存 ============
         try:
             with open(self.current_filepath, 'w', encoding='utf-8', newline="") as f:
                 writer = csv.writer(f)
@@ -89,7 +96,35 @@ class DataCollector:
                         
             print(f"[数据] 动作 {self.current_action} 采集完毕，已保存至 {self.current_filepath}")
         except Exception as e:
-            print(f"[写入错误] 无法保存数据表：{e}")
+            print(f"[EMG写入错误] 无法保存数据表：{e}")
+
+        # ============ EEG 自动迁移 ============
+        # 等待1秒确保KSEEG软件生成并释放文件写入锁
+        time.sleep(1)
+        
+        try:
+            # 获取当前工程盘符 (如 "D:\") 并拼接KSEEG根目录
+            drive_root = os.path.splitdrive(os.getcwd())[0] + os.sep
+            kseeg_dir = os.path.join(drive_root, "KSEEG")
+            
+            if os.path.exists(kseeg_dir):
+                # 找出 KSEEG 底下的所有子目录并按修改时间(mtime)获取最新的一个
+                dirs = [os.path.join(kseeg_dir, d) for d in os.listdir(kseeg_dir) if os.path.isdir(os.path.join(kseeg_dir, d))]
+                if dirs:
+                    latest_dir = max(dirs, key=os.path.getmtime)
+                    
+                    # 移动到 Dataset/EEG_Data/{subject_name}/{subject_name}_{round_num}_{action} 中
+                    if os.path.exists(self.current_eeg_dest):
+                        shutil.rmtree(self.current_eeg_dest) # 直接擦除旧记录
+                    
+                    shutil.move(latest_dir, self.current_eeg_dest)
+                    print(f"[EEG数据] 已将KSEEG新数据成功搬运并重命名为: {self.current_eeg_dest}")
+                else:
+                    print("[EEG警告] KSEEG 目录下未找到任何采集文件夹。")
+            else:
+                print(f"[EEG警告] 没有找到上位机的默认保存目录 {kseeg_dir}。")
+        except Exception as e:
+            print(f"[EEG移动失败] {e}")
             
     def abort_trial(self):
         """撤销操作：中止当前采集并丢弃数据"""
