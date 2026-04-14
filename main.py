@@ -6,13 +6,13 @@ import math
 
 app = FastAPI()
 
-# 1. 提供前端 HTML 页面
+# 提供前端 HTML 页面
 @app.get("/")
 async def get_index():
     with open("static/index.html", "r", encoding="utf-8") as f:
         return HTMLResponse(f.read())
 
-# 2. WebSocket 路由：用于实时传输数据
+# WebSocket 路由：用于实时传输数据
 @app.websocket("/ws/signal")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
