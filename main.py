@@ -2,6 +2,7 @@ import asyncio
 import random
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import contextlib
 
@@ -16,6 +17,7 @@ async def lifespan(app: FastAPI):
     task.cancel()
 
 app = FastAPI(lifespan=lifespan)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # 动作列表
 action_list = ['wj', 'down', 'left', 'right', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'wq', 'ok']
