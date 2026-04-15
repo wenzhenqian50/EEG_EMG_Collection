@@ -21,4 +21,4 @@ WinActivate, ahk_exe emgsdk_demo.exe
 WinMove, ahk_exe emgsdk_demo.exe, , 100, 200, 1200, 1200
 Sleep, 2000 
 ; 自动最小化
-Click, 1000, 27
+; Click, 1000, 27

@@ -10,7 +10,7 @@ from pywinauto import Application
 LOG_NAME = "wzq"
 IDX_COUNTER = 1
 # 串口配置
-SERIAL_PORT = "COM3"
+SERIAL_PORT = "COM5"
 SERIAL_BAUD = 115200
 # EEG上位机窗口名
 EEG_EXE_PATH = "eegsdk_demo.exe"
@@ -68,6 +68,9 @@ class DataCollector:
         eeg_folder_path = os.path.join("Dataset", "EEG_Data", subject_name)
         os.makedirs(eeg_folder_path, exist_ok=True)
         self.current_eeg_dest = os.path.join(eeg_folder_path, f'{subject_name}_{round_num}_{action}')
+        
+        if self.ser is None or not self.ser.is_open:
+            print("\n[极度危险] 硬件串口尚未连接或已断开！本次采集将无法录入任何 EMG 数据，请检查设备！\n")
         
         self.trigger_eeg_app("start")
         self.is_collecting = True
@@ -136,20 +139,22 @@ class DataCollector:
     async def run_loop(self):
         """异步持续从串口读数据并存入buffer"""
         while True:
-            if self.is_collecting and self.ser and self.ser.isOpen():
+            if self.is_collecting and self.ser and self.ser.is_open:
                 try:
                     # 读取可用的所有行
                     while self.ser.in_waiting > 0:
                         line = self.ser.readline()
                         if line:
-                            data = line.decode('utf-8', errors='ignore').rstrip().split(" ")
+                            data = str(line.decode('utf-8').rstrip()).split(" ")
                             if len(data) == 8:
                                 try:
-                                    row_vals = [int(x) for x in data]
+                                    row_vals = [int(data[0]), int(data[1]), int(data[2]), int(data[3]), int(data[4]), int(data[5]), int(data[6]), int(data[7])]
                                     if self.current_phase in self.buffer:
                                         self.buffer[self.current_phase].append(row_vals)
                                 except ValueError:
                                     pass # 忽略解析错误的数据
+                            else:
+                                print(f"警告: 收到的数据格式不正确: {data}")
                 except Exception as e:
                     print(f"串口读取异常: {e}")
             await asyncio.sleep(0.005) # 高频轮询
