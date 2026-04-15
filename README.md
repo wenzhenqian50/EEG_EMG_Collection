@@ -1,6 +1,6 @@
 # Build an automated EEG & EMG acquisition kit
 
-**Install Dependencies:** `pip install -r requirements.txt`
+**Install Dependencies:** `pip install -r requirements.txt`  
 **Start Web:** `uvicorn main:app --reload`
 
 - Dataset 采集数据集

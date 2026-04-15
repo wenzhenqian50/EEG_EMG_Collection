@@ -7,13 +7,21 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
+    <!-- Magnetic Pointer -->
+    <div class="pointer">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+
     <!-- 装饰球提供更好的折射效果 -->
     <div class="blob-1"></div>
     <div class="blob-2"></div>
 
     <div class="container">
         <div class="input-group">
-            <input type="text" id="ui-username" class="name-input" placeholder="输入采集者姓名..." />
+            <input type="text" id="ui-username" class="name-input _target" placeholder="输入采集者姓名..." />
         </div>
 
         <div class="info-section">
@@ -24,15 +32,15 @@
         <div class="countdown-text" id="ui-countdown">0.0</div>
 
         <div class="controls">
-            <button class="btn-start" onclick="sendCommand('start')">
+            <button class="btn-start _target" onclick="sendCommand('start')">
                 <svg class="icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                 启动
             </button>
-            <button class="btn-pause" onclick="sendCommand('pause')">
+            <button class="btn-pause _target" onclick="sendCommand('pause')">
                 <svg class="icon" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
                 暂停
             </button>
-            <button class="btn-undo" onclick="sendCommand('undo')">
+            <button class="btn-undo _target" onclick="sendCommand('undo')">
                 <svg class="icon" viewBox="0 0 24 24"><path d="M3 7v6h6"></path><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path></svg>
                 撤销
             </button>
@@ -105,6 +113,58 @@
             console.log('WebSocket 断开，尝试重连...');
             setTimeout(() => window.location.reload(), 3000);
         };
+
+        // Magnetic Pointer Logic
+        const pointer = {
+            container: document.querySelector(".pointer"),
+            current_target: null,
+            x: window.innerWidth / 2,
+            y: window.innerHeight / 2,
+            target_x: window.innerWidth / 2,
+            target_y: window.innerHeight / 2,
+            init() {
+                window.addEventListener("mousemove", this.move.bind(this));
+                this.bind_targets_events();
+                this.loop();
+            },
+            move(e) {
+                let px = e.clientX;
+                let py = e.clientY;
+                if (this.current_target) {
+                    const rect = this.current_target.getBoundingClientRect();
+                    const center_x = rect.left + rect.width / 2;
+                    const center_y = rect.top + rect.height / 2;
+                    px = center_x + (px - center_x) * 0.1;
+                    py = center_y + (py - center_y) * 0.1;
+                }
+                this.target_x = px;
+                this.target_y = py;
+            },
+            loop() {
+                // 使用 LERP 线性插值计算出跟随残影的丝滑坐标
+                this.x += (this.target_x - this.x) * 0.25;
+                this.y += (this.target_y - this.y) * 0.25;
+                this.container.style.transform = `translate(${this.x}px, ${this.y}px)`;
+                requestAnimationFrame(this.loop.bind(this));
+            },
+            bind_targets_events() {
+                [...document.querySelectorAll("._target")].forEach(ele => {
+                    ele.onmouseenter = () => {
+                        this.current_target = ele;
+                        const rect = ele.getBoundingClientRect();
+                        // Add extra padding to neatly frame the target
+                        this.container.style.setProperty("--width", rect.width + 20 + "px");
+                        this.container.style.setProperty("--height", rect.height + 20 + "px");
+                    };
+                    ele.onmouseleave = () => {
+                        this.current_target = null;
+                        this.container.style.setProperty("--width", "4rem");
+                        this.container.style.setProperty("--height", "4rem");
+                    };
+                });
+            }
+        };
+        pointer.init();
     </script>
 </body>
 </html>
