@@ -4,3 +4,5 @@ pyautogui
 fastapi
 uvicorn
 websockets
+pandas
+matplotlib
