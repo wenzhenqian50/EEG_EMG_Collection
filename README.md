@@ -2,6 +2,7 @@
 
 **EMG Device:** Long Push The Botton -> Double Click The Botton
 
+**Python Version:** `3.11.15`
 **Install Dependencies:** `pip install -r requirements.txt`  
 **Start Web:** `uvicorn main:app --reload`
 

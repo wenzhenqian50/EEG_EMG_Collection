@@ -10,7 +10,7 @@ WinActivate, ahk_exe eegsdk_demo.exe
 ; 强制移动并调整大小
 WinMove, ahk_exe eegsdk_demo.exe, , 100, 100, 1200, 1200
 ; 等待应用加载完成
-Sleep, 2000 
+Sleep, 1000 
 ; 模拟点击按钮
 ; Click, 847, 104
 
@@ -19,6 +19,6 @@ Run, "./EMG_Upper/emgsdk_demo.exe"
 WinWait, ahk_exe emgsdk_demo.exe
 WinActivate, ahk_exe emgsdk_demo.exe
 WinMove, ahk_exe emgsdk_demo.exe, , 100, 200, 1200, 1200
-Sleep, 2000 
+Sleep, 1000 
 ; 自动最小化
 ; Click, 1000, 27
