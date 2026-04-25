@@ -5,12 +5,13 @@ import serial
 import shutil
 import time
 from pywinauto import Application
+from pywinauto import mouse
 
 # ================= Configuration ==================
 LOG_NAME = "wzq"
 IDX_COUNTER = 1
 # 串口配置
-SERIAL_PORT = "COM5"
+SERIAL_PORT = "COM3"
 SERIAL_BAUD = 115200
 # EEG上位机窗口名
 EEG_EXE_PATH = "eegsdk_demo.exe"
@@ -28,6 +29,7 @@ class DataCollector:
             'MotorPrep': [],
             'Execution': []
         }
+        self.serial_buffer_str = ""
         
         self._connect_serial()
 
@@ -40,19 +42,33 @@ class DataCollector:
 
     def trigger_eeg_app(self, cmd="start"):
         try:
-            # 改为使用 win32 模式寻找窗口，提升速度与兼容性
-            app = Application(backend="win32").connect(path=EEG_EXE_PATH)
-            win = app.top_window()
             if cmd == "start":
-                # 根据 widget_tree.txt，触发保存（即开始记录数据）为 "保存" 按钮 
-                win.child_window(title="保存").click()
-                print("[EEG上位机] 触发: 保存 (开始采集)")
+                # 根据层级信息，"保存" 按钮的位置 (L1174, T543, R1244, B567)
+                # 计算出中心点坐标: x = (1174+1244)/2 = 1209, y = (543+567)/2 = 555
+                mouse.click(coords=(522, 180))
+                print("[EEG上位机] 触发: 保存 (开始采集) - 使用固定坐标 (1209, 555) 点击")
             elif cmd == "stop":
-                # 根据 widget_tree.txt，触发停止记录数据为 "保存结束" 按钮 
-                win.child_window(title="保存结束").click()
-                print("[EEG上位机] 触发: 保存结束 (停止采集)")
+                # 根据层级信息，"保存结束" 按钮的位置 (L1273, T543, R1337, B567)
+                # 计算出中心点坐标: x = (1273+1337)/2 = 1305, y = (543+567)/2 = 555
+                mouse.click(coords=(613, 180))
+                print("[EEG上位机] 触发: 保存结束 (停止采集) - 使用固定坐标 (1305, 555) 点击")
         except Exception as e:
-            print(f"[警告] pywinauto未能成功控制EEG上位机 ({cmd}): {e}")
+            print(f"[警告] 鼠标点击操作失败 ({cmd}): {e}")
+    # def trigger_eeg_app(self, cmd="start"):
+    #     try:
+    #         # 改为使用 win32 模式寻找窗口，提升速度与兼容性
+    #         app = Application(backend="win32").connect(path=EEG_EXE_PATH)
+    #         win = app.top_window()
+    #         if cmd == "start":
+    #             # 根据 widget_tree.txt，触发保存（即开始记录数据）为 "保存" 按钮 
+    #             win.child_window(title="保存").click()
+    #             print("[EEG上位机] 触发: 保存 (开始采集)")
+    #         elif cmd == "stop":
+    #             # 根据 widget_tree.txt，触发停止记录数据为 "保存结束" 按钮 
+    #             win.child_window(title="保存结束").click()
+    #             print("[EEG上位机] 触发: 保存结束 (停止采集)")
+    #     except Exception as e:
+    #         print(f"[警告] pywinauto未能成功控制EEG上位机 ({cmd}): {e}")
 
     def start_trial(self, action, subject_name, round_num):
         """开始一次新的完整动作采集（前3个阶段）"""
@@ -141,22 +157,39 @@ class DataCollector:
         while True:
             if self.is_collecting and self.ser and self.ser.is_open:
                 try:
-                    # 读取可用的所有行
-                    while self.ser.in_waiting > 0:
-                        line = self.ser.readline()
-                        if line:
-                            data = str(line.decode('utf-8').rstrip()).split(" ")
-                            if len(data) == 8:
-                                try:
-                                    row_vals = [int(data[0]), int(data[1]), int(data[2]), int(data[3]), int(data[4]), int(data[5]), int(data[6]), int(data[7])]
-                                    if self.current_phase in self.buffer:
-                                        self.buffer[self.current_phase].append(row_vals)
-                                except ValueError:
-                                    pass # 忽略解析错误的数据
-                            else:
-                                print(f"警告: 收到的数据格式不正确: {data}")
+                    # 使用 in_waiting 读取可用字节，避免 readline() 被 timeout 截断
+                    if self.ser.in_waiting > 0:
+                        raw_data = self.ser.read(self.ser.in_waiting).decode('utf-8', errors='ignore')
+                        self.serial_buffer_str += raw_data
+                        
+                        # 按换行符分割出所有的完整行
+                        if '\n' in self.serial_buffer_str:
+                            lines = self.serial_buffer_str.split('\n')
+                            # 最后一个元素是不完整的行（可能是空字符串），保留到缓冲区等下次拼接
+                            self.serial_buffer_str = lines.pop()
+                            
+                            for line in lines:
+                                line = line.strip()
+                                if not line:
+                                    continue
+                                
+                                # .split()（不带参数）能自动过滤多余的空格或制表符
+                                data = line.split()
+                                if len(data) == 8:
+                                    try:
+                                        row_vals = [int(v) for v in data]
+                                        if self.current_phase in self.buffer:
+                                            self.buffer[self.current_phase].append(row_vals)
+                                    except ValueError:
+                                        pass # 忽略解析错误的数据
+                                else:
+                                    print(f"警告: 收到的数据通道数不正确(已丢弃): {data}")
                 except Exception as e:
                     print(f"串口读取异常: {e}")
+            else:
+                # 没在采集时，为了防止缓冲区无限暴涨也可以清空一下脏数据
+                if self.serial_buffer_str:
+                    self.serial_buffer_str = ""
             await asyncio.sleep(0.005) # 高频轮询
 
 collector = DataCollector()
